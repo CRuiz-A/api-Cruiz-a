@@ -45,6 +45,9 @@ export class AuthService {
         email,
         password: hashedPassword,
         name,
+        birthdate: '1990-01-01', // Replace with actual value
+        gender: 'male', // Replace with actual value
+        userType: 1, // Replace with actual value
       });
 
       // Generar tokens

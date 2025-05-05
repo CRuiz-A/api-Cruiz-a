@@ -39,6 +39,27 @@ export class CreateUserDto {
       'La contraseña debe contener al menos una mayúscula, una minúscula y un número o carácter especial',
   })
   password: string;
+
+  @ApiProperty({
+    example: '1990-01-01',
+    description: 'Fecha de nacimiento del usuario',
+  })
+  @IsNotEmpty({ message: 'La fecha de nacimiento es requerida' })
+  birthdate: string;
+
+  @ApiProperty({
+    example: 'male',
+    description: 'Género del usuario (male, female, other)',
+  })
+  @IsNotEmpty({ message: 'El género es requerido' })
+  gender: string;
+
+  @ApiProperty({
+    example: 1,
+    description: 'Tipo de usuario (0, 1, 2)',
+  })
+  @IsNotEmpty({ message: 'El tipo de usuario es requerido' })
+  userType: number;
 }
 
 export class UpdateUserDto {
@@ -73,6 +94,27 @@ export class UpdateUserDto {
   })
   @IsOptional()
   password?: string;
+
+  @ApiPropertyOptional({
+    example: '1990-01-01',
+    description: 'Fecha de nacimiento del usuario',
+  })
+  @IsOptional()
+  birthdate?: string;
+
+  @ApiPropertyOptional({
+    example: 'male',
+    description: 'Género del usuario (male, female, other)',
+  })
+  @IsOptional()
+  gender?: string;
+
+  @ApiPropertyOptional({
+    example: 1,
+    description: 'Tipo de usuario (0, 1, 2)',
+  })
+  @IsOptional()
+  userType?: number;
 }
 
 export class UserResponseDto {

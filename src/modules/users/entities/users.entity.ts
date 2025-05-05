@@ -26,6 +26,15 @@ export class User {
   @Column({ default: true })
   isActive: boolean;
 
+  @Column()
+  birthdate: string;
+
+  @Column()
+  gender: string;
+
+  @Column()
+  userType: number;
+
   @CreateDateColumn()
   createdAt: Date;
 
