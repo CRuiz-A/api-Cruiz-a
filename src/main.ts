@@ -146,6 +146,25 @@ async function bootstrap() {
 
   // Show test user's classes again to see the new class
   await showTestUserClasses(app);
+
+  // Test getClassesByDate service
+  const classesService = app.get(ClassesService);
+  const testDateString = '2025-05-10';
+  const testTimezone = 'America/Bogota';
+
+  console.log(`\nFetching classes for date: ${testDateString} in timezone: ${testTimezone}`);
+  const classesOnDate = await classesService.getClassesByDate(testDateString, testTimezone);
+
+  if (classesOnDate.length > 0) {
+    console.log(`Found ${classesOnDate.length} classes on ${testDateString}:`);
+    classesOnDate.forEach(classInfo => {
+      if (classInfo.nombreClase) { // Only log if nombreClase is not null
+        console.log(`- Class: ${classInfo.nombreClase}, Instructor: ${classInfo.instructor?.name || 'N/A'}, Time: ${classInfo.horaInicio}-${classInfo.horaFin}`);
+      }
+    });
+  } else {
+    console.log(`No classes found on ${testDateString}.`);
+  }
 }
 bootstrap();
 

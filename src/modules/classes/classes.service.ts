@@ -1,10 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Between } from 'typeorm';
 import { Class } from './entities/class.entity';
 import { User } from '../users/entities/users.entity';
 import { ClassStudent } from './entities/class-student.entity';
 import { CreateClassDto } from './dto/class.dto';
+import { toZonedTime, fromZonedTime } from 'date-fns-tz';
+import { startOfDay, endOfDay } from 'date-fns';
 
 @Injectable()
 export class ClassesService {
@@ -21,6 +23,23 @@ export class ClassesService {
 
   async create(createClassDto: CreateClassDto) {
     const instructor = await this.userRepo.findOneByOrFail({ id: createClassDto.instructorId });
+
+    // Check for duplicate class
+    // Convert the date string to a Date object in the specified timezone for comparison
+    const classDateInTimezone = fromZonedTime(createClassDto.fecha, 'America/Bogota');
+
+    const existingClass = await this.classRepo.findOne({
+      where: {
+        nombreClase: createClassDto.nombreClase,
+        fecha: classDateInTimezone,
+        horaInicio: createClassDto.horaInicio,
+        instructor: { id: createClassDto.instructorId },
+      },
+    });
+
+    if (existingClass) {
+      throw new ConflictException('A class with the same name, date, start time, and instructor already exists.');
+    }
 
     const newClass = this.classRepo.create({
       nombreClase: createClassDto.nombreClase,
@@ -56,5 +75,23 @@ export class ClassesService {
       .addOrderBy('c.horaInicio', 'ASC')
       .addOrderBy('c.nombreClase', 'ASC')
       .getMany();
+  }
+
+  async getClassesByDate(dateString: string, timezone: string) {
+    const dateInTimezone = fromZonedTime(dateString, timezone);
+    const start = startOfDay(dateInTimezone);
+    const end = endOfDay(dateInTimezone);
+
+    return this.classRepo.find({
+      where: {
+        fecha: Between(start, end),
+      },
+      relations: ['instructor', 'students', 'students.student'],
+      order: {
+        fecha: 'ASC',
+        horaInicio: 'ASC',
+        nombreClase: 'ASC',
+      },
+    });
   }
 }
