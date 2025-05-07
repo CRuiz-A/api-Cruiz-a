@@ -1,18 +1,13 @@
-import { Controller, Post, Body, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { ClassesService } from './classes.service';
-import { CreateClassDto } from './dto/class.dto';
 
 @Controller('classes')
 export class ClassesController {
   constructor(private readonly classesService: ClassesService) {}
 
-  @Post()
-  create(@Body() dto: CreateClassDto) {
-    return this.classesService.create(dto);
-  }
-
-  @Get('student')
-  getByStudentEmail(@Query('email') email: string) {
-    return this.classesService.getClassesByStudentEmail(email);
+  @Get('by-date')
+  async findClassesByDate(@Query('date') date: string) {
+    // Assuming 'America/Bogota' timezone for now, this could be made dynamic
+    return this.classesService.getClassesByDate(date, 'America/Bogota');
   }
 }
