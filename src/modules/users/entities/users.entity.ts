@@ -6,7 +6,10 @@ import {
   UpdateDateColumn,
   BeforeInsert,
   BeforeUpdate,
+  OneToMany,
 } from 'typeorm';
+import { Class } from '../../classes/entities/class.entity';
+import { ClassStudent } from '../../classes/entities/class-student.entity';
 import * as bcrypt from 'bcrypt';
 
 @Entity('users')
@@ -40,6 +43,12 @@ export class User {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @OneToMany(() => Class, cls => cls.instructor)
+  classes: Class[];
+
+  @OneToMany(() => ClassStudent, cs => cs.student)
+  classStudents: ClassStudent[];
 
   @BeforeInsert()
   @BeforeUpdate()

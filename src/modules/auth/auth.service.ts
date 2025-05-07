@@ -15,6 +15,8 @@ import { Repository } from 'typeorm';
 import { Token } from './entities/token.entity';
 import { v4 as uuidv4 } from 'uuid';
 import * as crypto from 'crypto';
+import { Class } from '../classes/entities/class.entity';
+import { ClassStudent } from '../classes/entities/class-student.entity';
 
 @Injectable()
 export class AuthService {
