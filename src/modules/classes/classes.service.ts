@@ -94,4 +94,37 @@ export class ClassesService {
       },
     });
   }
+
+  async enrollStudentInClass(classId: number, studentEmail: string) {
+    const student = await this.userRepo.findOne({ where: { email: studentEmail, userType: 1 } });
+    const classToEnroll = await this.classRepo.findOne({ where: { id: classId } });
+
+    if (!student) {
+      throw new Error(`Student with email ${studentEmail} not found.`);
+    }
+
+    if (!classToEnroll) {
+      throw new Error(`Class with ID ${classId} not found.`);
+    }
+
+    // Check if the student is already in the class
+    const existingClassStudent = await this.classStudentRepo.findOne({
+      where: {
+        class: { id: classToEnroll.id },
+        student: { id: student.id },
+      },
+    });
+
+    if (existingClassStudent) {
+      throw new ConflictException(`Student with email ${studentEmail} is already enrolled in class with ID ${classId}.`);
+    }
+
+    const classStudent = this.classStudentRepo.create({
+      class: classToEnroll,
+      student: student,
+    });
+
+    await this.classStudentRepo.save(classStudent);
+    return { success: true, message: 'Student enrolled successfully.' };
+  }
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, Post, Body } from '@nestjs/common';
 import { ClassesService } from './classes.service';
 
 @Controller('classes')
@@ -15,5 +15,13 @@ export class ClassesController {
   @Get('by-student-email')
   async findClassesByStudentEmail(@Query('email') email: string) {
     return this.classesService.getClassesByStudentEmail(email);
+  }
+
+  @Post('enroll-student')
+  async enrollStudentInClass(
+    @Body('classId') classId: number,
+    @Body('studentEmail') studentEmail: string,
+  ) {
+    return this.classesService.enrollStudentInClass(classId, studentEmail);
   }
 }

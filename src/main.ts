@@ -35,6 +35,65 @@ async function addTestUser(app: INestApplication) {
   }
 }
 
+async function testEnrollStudentEndpoint() {
+  const testUserEmail = 'testuser@example.com';
+  const testClassName = 'Test Class'; // Assuming 'Test Class' is created by addTestInstructorAndClass
+
+  try {
+    // In a real test, you would get the class ID dynamically after creating the class.
+    // For this basic test, we'll assume the class with 'Test Class' name exists and find its ID.
+    // This requires the NestJS app to be running and the test data functions to have run.
+
+    // A more robust test would use the INestApplication instance to interact with services directly
+    // or use a testing module. However, for a basic test in main.ts, simulating an HTTP request is simpler.
+
+    // Assuming the app is running on port 3001 (or process.env.PORT)
+    const baseUrl = `http://localhost:${process.env.PORT || 3001}/api`;
+
+    // First, find the class ID by name (this is a simplification for this basic test)
+    const classesResponse = await fetch(`${baseUrl}/classes/by-student-email?email=${encodeURIComponent(testUserEmail)}`);
+    const classesData = await classesResponse.json();
+    
+    let testClassId = null;
+    if (classesData && classesData.length > 0) {
+      const testClass = classesData.find((cls: any) => cls.nombreClase === testClassName);
+      if (testClass) {
+        testClassId = testClass.id;
+      }
+    }
+
+    if (!testClassId) {
+      console.error(`Test failed: Could not find class with name ${testClassName} to enroll student.`);
+      return;
+    }
+
+
+    console.log(`\nTesting enroll-student endpoint with user ${testUserEmail} and class ID ${testClassId}...`);
+
+    const response = await fetch(`${baseUrl}/classes/enroll-student`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        classId: testClassId,
+        studentEmail: testUserEmail,
+      }),
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      console.log('Enroll student endpoint test successful:', result);
+    } else {
+      console.error('Enroll student endpoint test failed:', result);
+    }
+
+  } catch (error) {
+    console.error('Error during enroll student endpoint test:', error);
+  }
+}
+
 async function addTestInstructorAndClass(app: INestApplication) {
   const usersService = app.get(UsersService);
   const classesService = app.get(ClassesService);
@@ -113,7 +172,7 @@ async function bootstrap() {
   // Configuración de CORS
   app.enableCors();
 
-  // Configuración de prefijo global para la API (opcional)
+  // Configuración de prefijo global para el API (opcional)
   app.setGlobalPrefix('api');
 
   // Configuración de Swagger
@@ -165,6 +224,9 @@ async function bootstrap() {
   } else {
     console.log(`No classes found on ${testDateString}.`);
   }
+
+  // Test enroll-student endpoint
+  await testEnrollStudentEndpoint();
 }
 bootstrap();
 
@@ -231,7 +293,7 @@ async function addSecondTestClassAndEnrollUser(app: INestApplication) {
       student: testUser,
     });
 
-    await classStudentRepo.save(classStudent);
+    await this.classStudentRepo.save(classStudent);
     console.log('Test user added to second test class successfully.');
 
   } catch (error) {
