@@ -130,12 +130,14 @@ export class UsersService {
   }
 
   async findLatestByType(userType: number, limit: number): Promise<UserResponseDto[]> {
+    console.log(`findLatestByType called with userType: ${userType}, limit: ${limit}`);
     const users = await this.usersRepository.find({
       where: { userType }, // Using the correct property name 'userType'
       order: { createdAt: 'DESC' }, // Order by creation date descending
       take: limit, // Limit the number of results
     });
 
+    console.log(`findLatestByType found ${users.length} users.`);
     return users.map((user) => {
       const { password, ...result } = user;
       return result as UserResponseDto;

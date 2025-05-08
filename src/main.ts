@@ -230,8 +230,31 @@ async function bootstrap() {
 
   // Test getStudentsByClassId service
   await testGetServiceStudentsByClassId(app);
+
+  // Test get latest users endpoint
+  await testGetLatestUsersEndpoint();
 }
 bootstrap();
+
+async function testGetLatestUsersEndpoint() {
+  try {
+    const baseUrl = `http://localhost:${process.env.PORT || 3001}/api`;
+    const type = 1;
+    const limit = 5;
+    console.log(`\nTesting /users/latest/${type}/${limit} endpoint...`);
+
+    const response = await fetch(`${baseUrl}/users/latest/${type}/${limit}`);
+    const result = await response.json();
+
+    if (response.ok) {
+      console.log('Get latest users endpoint test successful:', result);
+    } else {
+      console.error('Get latest users endpoint test failed:', result);
+    }
+  } catch (error) {
+    console.error('Error during get latest users endpoint test:', error);
+  }
+}
 
 async function addSecondTestClassAndEnrollUser(app: INestApplication) {
   const usersService = app.get(UsersService);
@@ -360,7 +383,7 @@ async function addTestUserToTestClass(app: INestApplication) {
       student: testUser,
     });
 
-    await classStudentRepo.save(classStudent);
+    await this.classStudentRepo.save(classStudent);
     console.log('Test user added to test class successfully.');
 
   } catch (error) {
