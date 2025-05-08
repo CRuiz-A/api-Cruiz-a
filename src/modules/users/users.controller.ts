@@ -1,4 +1,4 @@
-import {
+ import {
   Controller,
   Get,
   Post,
@@ -11,6 +11,8 @@ import {
   HttpStatus,
   Request,
   ForbiddenException,
+  Query,
+  NotFoundException,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto, UpdateUserDto, UserResponseDto } from './DTO/users.dto';
@@ -194,5 +196,25 @@ export class UsersController {
     @Param('limit') limit: string,
   ): Promise<UserResponseDto[]> {
     return this.usersService.findLatestByType(+type, +limit);
+  }
+
+  @Get('search')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Buscar usuario por correo electrónico' })
+  @ApiResponse({
+    status: 200,
+    description: 'Usuario encontrado exitosamente',
+    type: UserResponseDto,
+  })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
+  async searchByEmail(@Query('email') email: string): Promise<UserResponseDto> {
+    const user = await this.usersService.findByEmail(email);
+    if (!user) {
+      throw new NotFoundException('Usuario no encontrado');
+    }
+    const { password, ...result } = user;
+    return result as UserResponseDto;
   }
 }

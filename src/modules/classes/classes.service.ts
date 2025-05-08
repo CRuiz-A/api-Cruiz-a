@@ -116,7 +116,7 @@ export class ClassesService {
     });
 
     if (existingClassStudent) {
-      throw new ConflictException(`Student with email ${studentEmail} is already enrolled in class with ID ${classId}.`);
+      throw new ConflictException(`El estudiante con correo ${studentEmail} ya está inscrito en la clase con ID ${classId}.`);
     }
 
     const classStudent = this.classStudentRepo.create({
