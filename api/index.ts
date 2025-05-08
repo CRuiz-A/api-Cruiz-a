@@ -4,4 +4,12 @@
 
 import { AppFactory } from '../src/AppFactory.js';
 
-export default AppFactory.create().expressApp;
+const app = AppFactory.create().expressApp;
+
+// Add a simple logging middleware
+app.use((req, res, next) => {
+  console.log(`Incoming request: ${req.method} ${req.url}`);
+  next();
+});
+
+export default app;
