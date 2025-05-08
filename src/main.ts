@@ -233,8 +233,29 @@ async function bootstrap() {
 
   // Test get latest users endpoint
   await testGetLatestUsersEndpoint();
+
+  // Test search user by email service
+  await testSearchUserByEmail(app);
 }
 bootstrap();
+
+async function testSearchUserByEmail(app: INestApplication) {
+  const usersService = app.get(UsersService);
+  const testEmail = 'testinstructor@example.com'; // Use the email of the test instructor
+
+  try {
+    console.log(`\nTesting search user by email service with email: ${testEmail}...`);
+    const user = await usersService.findByEmail(testEmail);
+
+    if (user) {
+      console.log('Search user by email service test successful. Found user:', user.email, user.name);
+    } else {
+      console.log('Search user by email service test successful. User not found.');
+    }
+  } catch (error) {
+    console.error(`Error testing search user by email service for email ${testEmail}:`, error);
+  }
+}
 
 async function testGetLatestUsersEndpoint() {
   try {
