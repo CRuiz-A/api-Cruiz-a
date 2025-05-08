@@ -199,8 +199,6 @@ export class UsersController {
   }
 
   @Get('search')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'Buscar usuario por correo electrónico' })
   @ApiResponse({
     status: 200,
