@@ -176,4 +176,23 @@ export class UsersController {
     );
     return { message: 'Contraseña cambiada exitosamente' };
   }
+
+  @Get('latest/:type/:limit')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Obtener los últimos usuarios por tipo' })
+  @ApiParam({ name: 'type', description: 'Tipo de usuario' })
+  @ApiParam({ name: 'limit', description: 'Número máximo de usuarios a retornar' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lista de últimos usuarios obtenida exitosamente',
+    type: [UserResponseDto],
+  })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  async findLatestByType(
+    @Param('type') type: string,
+    @Param('limit') limit: string,
+  ): Promise<UserResponseDto[]> {
+    return this.usersService.findLatestByType(+type, +limit);
+  }
 }

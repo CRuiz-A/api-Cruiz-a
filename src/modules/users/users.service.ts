@@ -128,4 +128,17 @@ export class UsersService {
     user.password = newPassword;
     await this.usersRepository.save(user);
   }
+
+  async findLatestByType(userType: number, limit: number): Promise<UserResponseDto[]> {
+    const users = await this.usersRepository.find({
+      where: { userType }, // Using the correct property name 'userType'
+      order: { createdAt: 'DESC' }, // Order by creation date descending
+      take: limit, // Limit the number of results
+    });
+
+    return users.map((user) => {
+      const { password, ...result } = user;
+      return result as UserResponseDto;
+    });
+  }
 }
