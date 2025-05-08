@@ -127,4 +127,22 @@ export class ClassesService {
     await this.classStudentRepo.save(classStudent);
     return { success: true, message: 'Student enrolled successfully.' };
   }
+
+  async getStudentsByClassId(classId: number) {
+    const classStudents = await this.classStudentRepo.find({
+      where: { class: { id: classId } },
+      relations: ['student'],
+    });
+
+    if (!classStudents || classStudents.length === 0) {
+      // Optionally, check if the class exists at all if no students are found
+      const classExists = await this.classRepo.findOne({ where: { id: classId } });
+      if (!classExists) {
+        throw new Error(`Class with ID ${classId} not found.`);
+      }
+      return []; // Return empty array if class exists but has no students
+    }
+
+    return classStudents.map(cs => cs.student);
+  }
 }

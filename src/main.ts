@@ -53,7 +53,7 @@ async function testEnrollStudentEndpoint() {
     // First, find the class ID by name (this is a simplification for this basic test)
     const classesResponse = await fetch(`${baseUrl}/classes/by-student-email?email=${encodeURIComponent(testUserEmail)}`);
     const classesData = await classesResponse.json();
-    
+
     let testClassId = null;
     if (classesData && classesData.length > 0) {
       const testClass = classesData.find((cls: any) => cls.nombreClase === testClassName);
@@ -227,6 +227,9 @@ async function bootstrap() {
 
   // Test enroll-student endpoint
   await testEnrollStudentEndpoint();
+
+  // Test getStudentsByClassId service
+  await testGetServiceStudentsByClassId(app);
 }
 bootstrap();
 
@@ -287,7 +290,6 @@ async function addSecondTestClassAndEnrollUser(app: INestApplication) {
       return;
     }
 
-    // Enroll the test user in the second class
     const classStudent = classStudentRepo.create({
       class: secondTestClass,
       student: testUser,
@@ -363,5 +365,26 @@ async function addTestUserToTestClass(app: INestApplication) {
 
   } catch (error) {
     console.error('Error adding test user to test class:', error);
+  }
+}
+
+async function testGetServiceStudentsByClassId(app: INestApplication) {
+  const classesService = app.get(ClassesService);
+  const classIdToTest = 18;
+
+  try {
+    console.log(`\nTesting getStudentsByClassId service with class ID: ${classIdToTest}...`);
+    const students = await classesService.getStudentsByClassId(classIdToTest);
+
+    if (students.length > 0) {
+      console.log(`Found ${students.length} students for class ID ${classIdToTest}:`);
+      students.forEach(student => {
+        console.log(`- Student: ${student.name} (ID: ${student.id}, Email: ${student.email})`);
+      });
+    } else {
+      console.log(`No students found for class ID ${classIdToTest}.`);
+    }
+  } catch (error) {
+    console.error(`Error testing getStudentsByClassId service for class ID ${classIdToTest}:`, error);
   }
 }

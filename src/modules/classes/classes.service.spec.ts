@@ -123,3 +123,21 @@ describe('ClassesService', () => {
     expect(result).toEqual(createdClass); // Expect the result to be the created class
   });
 });
+  it('should return students for a given class ID', async () => {
+    const classId = 18;
+    const mockStudents = [
+      { id: 1, name: 'Student 1', email: 'student1@example.com' },
+      { id: 2, name: 'Student 2', email: 'student2@example.com' },
+    ];
+
+    classStudentRepository.find = jest.fn().mockResolvedValue(mockStudents);
+
+    const result = await service.getStudentsByClassId(classId);
+
+    expect(classStudentRepository.find).toHaveBeenCalledWith({
+      where: { classId },
+      relations: ['student'], // Assuming there's a 'student' relation in ClassStudent entity
+    });
+    expect(result).toEqual(mockStudents);
+  });
+});
