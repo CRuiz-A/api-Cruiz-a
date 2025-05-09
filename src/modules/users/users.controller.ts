@@ -90,7 +90,8 @@ export class UsersController {
   ): Promise<UserResponseDto> {
     const user = await this.usersService.findById(+id);
     const { password, ...result } = user;
-    return result as UserResponseDto;
+    const isInstructor = user.userType === 2; // Calculate isInstructor
+    return { ...result, isInstructor } as UserResponseDto; // Include isInstructor in the result
   }
 
   @Patch(':id')
@@ -196,23 +197,5 @@ export class UsersController {
     @Param('limit') limit: string,
   ): Promise<UserResponseDto[]> {
     return this.usersService.findLatestByType(+type, +limit);
-  }
-
-  @Get('search')
-  @ApiOperation({ summary: 'Buscar usuario por correo electrónico' })
-  @ApiResponse({
-    status: 200,
-    description: 'Usuario encontrado exitosamente',
-    type: UserResponseDto,
-  })
-  @ApiResponse({ status: 401, description: 'No autorizado' })
-  @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
-  async searchByEmail(@Query('email') email: string): Promise<UserResponseDto> {
-    const user = await this.usersService.findByEmail(email);
-    if (!user) {
-      throw new NotFoundException('Usuario no encontrado');
-    }
-    const { password, ...result } = user;
-    return result as UserResponseDto;
   }
 }

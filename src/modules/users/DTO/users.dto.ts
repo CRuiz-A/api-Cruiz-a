@@ -144,4 +144,10 @@ export class UserResponseDto {
     description: 'Fecha de última actualización del usuario',
   })
   updatedAt: Date;
+
+  @ApiProperty({
+    example: true,
+    description: 'Indica si el usuario es un instructor',
+  })
+  isInstructor: boolean;
 }

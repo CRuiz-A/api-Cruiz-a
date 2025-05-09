@@ -31,7 +31,8 @@ export class UsersService {
 
       // Devolver usuario sin la contraseña
       const { password, ...result } = savedUser;
-      return result as UserResponseDto;
+      const isInstructor = savedUser.userType === 2;
+      return { ...result, isInstructor } as UserResponseDto;
     } catch (error) {
       if (error instanceof ConflictException) {
         throw error;
@@ -44,7 +45,8 @@ export class UsersService {
     const users = await this.usersRepository.find();
     return users.map((user) => {
       const { password, ...result } = user;
-      return result as UserResponseDto;
+      const isInstructor = user.userType === 2;
+      return { ...result, isInstructor } as UserResponseDto;
     });
   }
 
@@ -84,7 +86,8 @@ export class UsersService {
 
       // Devolver usuario sin la contraseña
       const { password, ...result } = updatedUser;
-      return result as UserResponseDto;
+      const isInstructor = updatedUser.userType === 2;
+      return { ...result, isInstructor } as UserResponseDto;
     } catch (error) {
       if (
         error instanceof NotFoundException ||
@@ -104,7 +107,8 @@ export class UsersService {
   async getProfile(id: number): Promise<UserResponseDto> {
     const user = await this.findById(id);
     const { password, ...result } = user;
-    return result as UserResponseDto;
+    const isInstructor = user.userType === 2;
+    return { ...result, isInstructor } as UserResponseDto;
   }
 
   // Método para cambiar la contraseña
@@ -140,7 +144,8 @@ export class UsersService {
     console.log(`findLatestByType found ${users.length} users.`);
     return users.map((user) => {
       const { password, ...result } = user;
-      return result as UserResponseDto;
+      const isInstructor = user.userType === 2;
+      return { ...result, isInstructor } as UserResponseDto;
     });
   }
 }
