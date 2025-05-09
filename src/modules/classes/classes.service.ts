@@ -1,10 +1,11 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException } from '@nestjs/common'; // Import NotFoundException
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
 import { Class } from './entities/class.entity';
 import { User } from '../users/entities/users.entity';
 import { ClassStudent } from './entities/class-student.entity';
-import { CreateClassDto } from './dto/class.dto';
+import { CreateClassDto as EnrollStudentDto } from './dto/class.dto'; // Rename existing DTO import
+import { CreateClassDto, ClassResponseDto } from './DTO/classes.dto'; // Import new DTOs
 import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 import { startOfDay, endOfDay } from 'date-fns';
 
@@ -21,19 +22,20 @@ export class ClassesService {
     private classStudentRepo: Repository<ClassStudent>,
   ) {}
 
-  async create(createClassDto: CreateClassDto) {
-    const instructor = await this.userRepo.findOneByOrFail({ id: createClassDto.instructorId });
+  // Renamed existing create method to enrollStudent
+  async enrollStudent(enrollStudentDto: EnrollStudentDto) {
+    const instructor = await this.userRepo.findOneByOrFail({ id: enrollStudentDto.instructorId });
 
     // Check for duplicate class
     // Convert the date string to a Date object in the specified timezone for comparison
-    const classDateInTimezone = fromZonedTime(createClassDto.fecha, 'America/Bogota');
+    const classDateInTimezone = fromZonedTime(enrollStudentDto.fecha, 'America/Bogota');
 
     const existingClass = await this.classRepo.findOne({
       where: {
-        nombreClase: createClassDto.nombreClase,
+        nombreClase: enrollStudentDto.nombreClase,
         fecha: classDateInTimezone,
-        horaInicio: createClassDto.horaInicio,
-        instructor: { id: createClassDto.instructorId },
+        horaInicio: enrollStudentDto.horaInicio,
+        instructor: { id: enrollStudentDto.instructorId },
       },
     });
 
@@ -42,16 +44,16 @@ export class ClassesService {
     }
 
     const newClass = this.classRepo.create({
-      nombreClase: createClassDto.nombreClase,
-      fecha: createClassDto.fecha,
-      horaInicio: createClassDto.horaInicio,
-      horaFin: createClassDto.horaFin,
+      nombreClase: enrollStudentDto.nombreClase,
+      fecha: enrollStudentDto.fecha,
+      horaInicio: enrollStudentDto.horaInicio,
+      horaFin: enrollStudentDto.horaFin,
       instructor,
     });
 
     const savedClass = await this.classRepo.save(newClass);
 
-    const classStudents = createClassDto.studentIds.map(studentId => {
+    const classStudents = enrollStudentDto.studentIds.map(studentId => {
       return this.classStudentRepo.create({
         class: savedClass,
         student: { id: studentId } as User,
@@ -61,6 +63,50 @@ export class ClassesService {
     await this.classStudentRepo.save(classStudents);
     return savedClass;
   }
+
+  // New method to create a Class
+  async createClass(createClassDto: CreateClassDto): Promise<ClassResponseDto> {
+    // Find the instructor
+    const instructor = await this.userRepo.findOne({
+      where: { id: createClassDto.instructorId, userType: 2 }, // Ensure user is an instructor
+    });
+
+    if (!instructor) {
+      throw new NotFoundException(`Instructor with ID ${createClassDto.instructorId} not found or is not an instructor.`);
+    }
+
+    // Check for duplicate class (optional, depending on requirements)
+    // For simplicity, skipping duplicate check based on all fields for now.
+    // A more robust check might involve date, time, and instructor.
+
+    // Create the new class entity
+    const newClass = this.classRepo.create({
+      nombreClase: createClassDto.nombreClase,
+      fecha: createClassDto.fecha,
+      horaInicio: createClassDto.horaInicio,
+      horaFin: createClassDto.horaFin,
+      instructor: instructor, // Link the instructor entity
+    });
+
+    // Save the class
+    const savedClass = await this.classRepo.save(newClass);
+
+    // Return ClassResponseDto
+    // Return ClassResponseDto
+    const classResponse: ClassResponseDto = {
+      id: savedClass.id,
+      nombreClase: savedClass.nombreClase,
+      fecha: savedClass.fecha.toISOString().split('T')[0], // Format Date to YYYY-MM-DD string
+      horaInicio: savedClass.horaInicio,
+      horaFin: savedClass.horaFin,
+      instructor: { id: instructor.id, name: instructor.name }, // Include simplified instructor info
+      createdAt: savedClass.createdAt, // Include createdAt
+      updatedAt: savedClass.updatedAt, // Include updatedAt
+    };
+
+    return classResponse;
+  }
+
 
   async getClassesByStudentEmail(email: string) {
     return this.classRepo

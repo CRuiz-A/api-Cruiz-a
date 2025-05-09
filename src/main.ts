@@ -146,7 +146,8 @@ async function addTestInstructorAndClass(app: INestApplication) {
     // Check if a class with this instructor already exists (optional, depending on desired behavior)
     // const existingClass = await classesService.findClassByInstructorAndName(instructor.id, testClass.nombreClase);
     // if (!existingClass) {
-    const createdClass = await classesService.create(testClass);
+    // Changed from create to enrollStudent based on service method rename
+    const createdClass = await classesService.enrollStudent(testClass);
     console.log('Test class created successfully:', createdClass);
     // } else {
     //   console.log('Test class already exists for this instructor.');
@@ -310,7 +311,7 @@ async function addSecondTestClassAndEnrollUser(app: INestApplication) {
       console.log('Second test class already exists.');
     } else {
       // Create the second test class
-      secondTestClass = await classesService.create(secondTestClassDetails);
+      secondTestClass = await classesService.createClass(secondTestClassDetails);
       console.log('Second test class created successfully:', secondTestClass);
     }
 

@@ -1,7 +1,8 @@
-import { Controller, Get, Query, Post, Body, Param, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Query, Post, Body, Param, NotFoundException, HttpStatus, HttpCode } from '@nestjs/common'; // Import HttpStatus, HttpCode
 import { ClassesService } from './classes.service';
 import { UsersService } from '../users/users.service'; // Import UsersService
 import { UserResponseDto } from '../users/DTO/users.dto'; // Import UserResponseDto
+import { CreateClassDto, ClassResponseDto } from './DTO/classes.dto'; // Import new DTOs
 import {
   ApiTags,
   ApiOperation,
@@ -18,6 +19,22 @@ export class ClassesController {
     private readonly classesService: ClassesService,
     private readonly usersService: UsersService, // Inject UsersService
   ) {}
+
+  @Post() // New endpoint for creating a class
+  @HttpCode(HttpStatus.CREATED) // Set status code to 201 Created
+  @ApiOperation({ summary: 'Crear una nueva clase' }) // Add Swagger operation summary
+  @ApiResponse({
+    status: 201,
+    description: 'Clase creada exitosamente',
+    type: ClassResponseDto,
+  }) // Add Swagger response
+  @ApiResponse({ status: 400, description: 'Datos inválidos' }) // Add Swagger response
+  @ApiResponse({ status: 404, description: 'Instructor no encontrado' }) // Add Swagger response
+  @ApiBody({ type: CreateClassDto }) // Add Swagger body description
+  async createClass(@Body() createClassDto: CreateClassDto): Promise<ClassResponseDto> {
+    return this.classesService.createClass(createClassDto);
+  }
+
 
   @Get('by-date')
   @ApiOperation({ summary: 'Obtener clases por fecha' }) // Add Swagger operation summary
