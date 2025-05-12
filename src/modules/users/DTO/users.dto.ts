@@ -5,8 +5,10 @@ import {
   IsString,
   Length,
   Matches,
+  IsEnum,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { UserType } from '../entities/users.entity';
 
 export class CreateUserDto {
   @ApiProperty({
@@ -60,6 +62,16 @@ export class CreateUserDto {
   })
   @IsNotEmpty({ message: 'El tipo de usuario es requerido' })
   userType: number;
+
+  @ApiProperty({
+    example: UserType.INSTRUCTOR,
+    description: 'Tipo de usuario',
+    enum: UserType,
+    enumName: 'UserType',
+  })
+  @IsEnum(UserType, { message: 'Tipo de usuario inválido' })
+  @IsNotEmpty({ message: 'El tipo de usuario es requerido' })
+  userTypeEnum: UserType;
 }
 
 export class UpdateUserDto {

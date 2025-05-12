@@ -1,6 +1,11 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe, INestApplication, ConflictException, InternalServerErrorException } from '@nestjs/common';
+import {
+  ValidationPipe,
+  INestApplication,
+  ConflictException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { UsersService } from './modules/users/users.service';
 import { CreateUserDto } from './modules/users/DTO/users.dto';
@@ -15,11 +20,12 @@ async function addTestUser(app: INestApplication) {
 
   const testUser: CreateUserDto = {
     email: 'testuser@example.com',
-    password: 'Test@123445',
-    name: 'Test user',
+    password: 'Test@1234',
+    userTypeEnum: 0,
+    name: 'Test User',
     birthdate: '1990-01-01',
     gender: 'male',
-    userType: 1, // Assuming 2 is the user type for instructors
+    userType: 0,
   };
 
   try {
@@ -51,24 +57,31 @@ async function testEnrollStudentEndpoint() {
     const baseUrl = `http://localhost:${process.env.PORT || 3001}/api`;
 
     // First, find the class ID by name (this is a simplification for this basic test)
-    const classesResponse = await fetch(`${baseUrl}/classes/by-student-email?email=${encodeURIComponent(testUserEmail)}`);
+    const classesResponse = await fetch(
+      `${baseUrl}/classes/by-student-email?email=${encodeURIComponent(testUserEmail)}`,
+    );
     const classesData = await classesResponse.json();
 
     let testClassId = null;
     if (classesData && classesData.length > 0) {
-      const testClass = classesData.find((cls: any) => cls.nombreClase === testClassName);
+      const testClass = classesData.find(
+        (cls: any) => cls.nombreClase === testClassName,
+      );
       if (testClass) {
         testClassId = testClass.id;
       }
     }
 
     if (!testClassId) {
-      console.error(`Test failed: Could not find class with name ${testClassName} to enroll student.`);
+      console.error(
+        `Test failed: Could not find class with name ${testClassName} to enroll student.`,
+      );
       return;
     }
 
-
-    console.log(`\nTesting enroll-student endpoint with user ${testUserEmail} and class ID ${testClassId}...`);
+    console.log(
+      `\nTesting enroll-student endpoint with user ${testUserEmail} and class ID ${testClassId}...`,
+    );
 
     const response = await fetch(`${baseUrl}/classes/enroll-student`, {
       method: 'POST',
@@ -88,7 +101,6 @@ async function testEnrollStudentEndpoint() {
     } else {
       console.error('Enroll student endpoint test failed:', result);
     }
-
   } catch (error) {
     console.error('Error during enroll student endpoint test:', error);
   }
@@ -101,6 +113,7 @@ async function addTestInstructorAndClass(app: INestApplication) {
   const testInstructor: CreateUserDto = {
     email: 'testinstructor@example.com',
     password: 'Instructor@1234',
+    userTypeEnum: 0,
     name: 'Test Instructor',
     birthdate: '1985-01-01',
     gender: 'male',
@@ -108,29 +121,33 @@ async function addTestInstructorAndClass(app: INestApplication) {
   };
 
   try {
-    const existingInstructor = await usersService.findByEmail(testInstructor.email);
+    const existingInstructor = await usersService.findByEmail(
+      testInstructor.email,
+    );
     let instructor;
     if (existingInstructor) {
       instructor = existingInstructor;
       console.log('Test instructor already exists.');
     } else {
       try {
-      instructor = await usersService.create(testInstructor);
-      console.log('Test instructor added successfully.');
-    } catch (error) {
-      // Catch ConflictException which is thrown by UsersService.create on duplicate key error
-      if (error instanceof ConflictException) {
-        console.log('Test instructor already exists.');
-        instructor = await usersService.findByEmail(testInstructor.email); // Fetch the existing user
-      } else {
-        throw error; // Re-throw other errors
+        instructor = await usersService.create(testInstructor);
+        console.log('Test instructor added successfully.');
+      } catch (error) {
+        // Catch ConflictException which is thrown by UsersService.create on duplicate key error
+        if (error instanceof ConflictException) {
+          console.log('Test instructor already exists.');
+          instructor = await usersService.findByEmail(testInstructor.email); // Fetch the existing user
+        } else {
+          throw error; // Re-throw other errors
         }
       }
     }
 
     // Add a check to ensure instructor is not null
     if (!instructor) {
-      console.error('Error: Could not retrieve test instructor after creation attempt.');
+      console.error(
+        'Error: Could not retrieve test instructor after creation attempt.',
+      );
       return; // Exit the function if instructor is null
     }
 
@@ -146,13 +163,11 @@ async function addTestInstructorAndClass(app: INestApplication) {
     // Check if a class with this instructor already exists (optional, depending on desired behavior)
     // const existingClass = await classesService.findClassByInstructorAndName(instructor.id, testClass.nombreClase);
     // if (!existingClass) {
-    // Changed from create to enrollStudent based on service method rename
-    const createdClass = await classesService.enrollStudent(testClass);
+    const createdClass = await classesService.create(testClass);
     console.log('Test class created successfully:', createdClass);
     // } else {
     //   console.log('Test class already exists for this instructor.');
     // }
-
   } catch (error) {
     console.error('Error adding test instructor or class:', error);
   }
@@ -171,7 +186,9 @@ async function bootstrap() {
   );
 
   // Configuración de CORS
-  app.enableCors();
+  app.enableCors({
+    origin: true,
+  });
 
   // Configuración de prefijo global para el API (opcional)
   app.setGlobalPrefix('api');
@@ -212,14 +229,22 @@ async function bootstrap() {
   const testDateString = '2025-05-10';
   const testTimezone = 'America/Bogota';
 
-  console.log(`\nFetching classes for date: ${testDateString} in timezone: ${testTimezone}`);
-  const classesOnDate = await classesService.getClassesByDate(testDateString, testTimezone);
+  console.log(
+    `\nFetching classes for date: ${testDateString} in timezone: ${testTimezone}`,
+  );
+  const classesOnDate = await classesService.getClassesByDate(
+    testDateString,
+    testTimezone,
+  );
 
   if (classesOnDate.length > 0) {
     console.log(`Found ${classesOnDate.length} classes on ${testDateString}:`);
-    classesOnDate.forEach(classInfo => {
-      if (classInfo.nombreClase) { // Only log if nombreClase is not null
-        console.log(`- Class: ${classInfo.nombreClase}, Instructor: ${classInfo.instructor?.name || 'N/A'}, Time: ${classInfo.horaInicio}-${classInfo.horaFin}`);
+    classesOnDate.forEach((classInfo) => {
+      if (classInfo.nombreClase) {
+        // Only log if nombreClase is not null
+        console.log(
+          `- Class: ${classInfo.nombreClase}, Instructor: ${classInfo.instructor?.name || 'N/A'}, Time: ${classInfo.horaInicio}-${classInfo.horaFin}`,
+        );
       }
     });
   } else {
@@ -245,16 +270,27 @@ async function testSearchUserByEmail(app: INestApplication) {
   const testEmail = 'testinstructor@example.com'; // Use the email of the test instructor
 
   try {
-    console.log(`\nTesting search user by email service with email: ${testEmail}...`);
+    console.log(
+      `\nTesting search user by email service with email: ${testEmail}...`,
+    );
     const user = await usersService.findByEmail(testEmail);
 
     if (user) {
-      console.log('Search user by email service test successful. Found user:', user.email, user.name);
+      console.log(
+        'Search user by email service test successful. Found user:',
+        user.email,
+        user.name,
+      );
     } else {
-      console.log('Search user by email service test successful. User not found.');
+      console.log(
+        'Search user by email service test successful. User not found.',
+      );
     }
   } catch (error) {
-    console.error(`Error testing search user by email service for email ${testEmail}:`, error);
+    console.error(
+      `Error testing search user by email service for email ${testEmail}:`,
+      error,
+    );
   }
 }
 
@@ -282,13 +318,19 @@ async function addSecondTestClassAndEnrollUser(app: INestApplication) {
   const usersService = app.get(UsersService);
   const classesService = app.get(ClassesService);
   const classRepo = app.get<Repository<Class>>('ClassRepository'); // Assuming 'ClassRepository' is the token
-  const classStudentRepo = app.get<Repository<ClassStudent>>('ClassStudentRepository'); // Assuming 'ClassStudentRepository' is the token
+  const classStudentRepo = app.get<Repository<ClassStudent>>(
+    'ClassStudentRepository',
+  ); // Assuming 'ClassStudentRepository' is the token
 
   try {
     // Retrieve the test instructor
-    const testInstructor = await usersService.findByEmail('testinstructor@example.com');
+    const testInstructor = await usersService.findByEmail(
+      'testinstructor@example.com',
+    );
     if (!testInstructor) {
-      console.error('Error adding second test class: Test instructor not found.');
+      console.error(
+        'Error adding second test class: Test instructor not found.',
+      );
       return;
     }
 
@@ -303,7 +345,9 @@ async function addSecondTestClassAndEnrollUser(app: INestApplication) {
     };
 
     // Check if the second class already exists
-    const existingSecondClass = await classRepo.findOne({ where: { nombreClase: secondTestClassDetails.nombreClase } });
+    const existingSecondClass = await classRepo.findOne({
+      where: { nombreClase: secondTestClassDetails.nombreClase },
+    });
     let secondTestClass;
 
     if (existingSecondClass) {
@@ -311,14 +355,16 @@ async function addSecondTestClassAndEnrollUser(app: INestApplication) {
       console.log('Second test class already exists.');
     } else {
       // Create the second test class
-      secondTestClass = await classesService.createClass(secondTestClassDetails);
+      secondTestClass = await classesService.create(secondTestClassDetails);
       console.log('Second test class created successfully:', secondTestClass);
     }
 
     // Retrieve the test user
     const testUser = await usersService.findByEmail('testuser@example.com');
     if (!testUser) {
-      console.error('Error enrolling test user in second class: Test user not found.');
+      console.error(
+        'Error enrolling test user in second class: Test user not found.',
+      );
       return;
     }
 
@@ -342,7 +388,6 @@ async function addSecondTestClassAndEnrollUser(app: INestApplication) {
 
     await this.classStudentRepo.save(classStudent);
     console.log('Test user added to second test class successfully.');
-
   } catch (error) {
     console.error('Error adding second test class or enrolling user:', error);
   }
@@ -353,12 +398,16 @@ async function showTestUserClasses(app: INestApplication) {
 
   try {
     console.log('Fetching classes for test user...');
-    const userClasses = await classesService.getClassesByStudentEmail('testuser@example.com');
+    const userClasses = await classesService.getClassesByStudentEmail(
+      'testuser@example.com',
+    );
 
     if (userClasses.length > 0) {
       console.log('Test user is enrolled in the following classes:');
-      userClasses.forEach(classInfo => {
-        console.log(`- Class: ${classInfo.nombreClase}, Instructor: ${classInfo.instructor.name}, Date: ${classInfo.fecha}, Time: ${classInfo.horaInicio}-${classInfo.horaFin}`);
+      userClasses.forEach((classInfo) => {
+        console.log(
+          `- Class: ${classInfo.nombreClase}, Instructor: ${classInfo.instructor.name}, Date: ${classInfo.fecha}, Time: ${classInfo.horaInicio}-${classInfo.horaFin}`,
+        );
       });
     } else {
       console.log('Test user is not enrolled in any classes.');
@@ -371,19 +420,27 @@ async function showTestUserClasses(app: INestApplication) {
 async function addTestUserToTestClass(app: INestApplication) {
   const usersService = app.get(UsersService);
   const classRepo = app.get<Repository<Class>>('ClassRepository'); // Assuming 'ClassRepository' is the token
-  const classStudentRepo = app.get<Repository<ClassStudent>>('ClassStudentRepository'); // Assuming 'ClassStudentRepository' is the token
+  const classStudentRepo = app.get<Repository<ClassStudent>>(
+    'ClassStudentRepository',
+  ); // Assuming 'ClassStudentRepository' is the token
 
   try {
     const testUser = await usersService.findByEmail('testuser@example.com');
-    const testClass = await classRepo.findOne({ where: { nombreClase: 'Test Class' } });
+    const testClass = await classRepo.findOne({
+      where: { nombreClase: 'Test Class' },
+    });
 
     if (!testUser) {
-      console.error('Error adding test user to test class: Test user not found.');
+      console.error(
+        'Error adding test user to test class: Test user not found.',
+      );
       return;
     }
 
     if (!testClass) {
-      console.error('Error adding test user to test class: Test class not found.');
+      console.error(
+        'Error adding test user to test class: Test class not found.',
+      );
       return;
     }
 
@@ -407,7 +464,6 @@ async function addTestUserToTestClass(app: INestApplication) {
 
     await this.classStudentRepo.save(classStudent);
     console.log('Test user added to test class successfully.');
-
   } catch (error) {
     console.error('Error adding test user to test class:', error);
   }
@@ -418,18 +474,27 @@ async function testGetServiceStudentsByClassId(app: INestApplication) {
   const classIdToTest = 18;
 
   try {
-    console.log(`\nTesting getStudentsByClassId service with class ID: ${classIdToTest}...`);
+    console.log(
+      `\nTesting getStudentsByClassId service with class ID: ${classIdToTest}...`,
+    );
     const students = await classesService.getStudentsByClassId(classIdToTest);
 
     if (students.length > 0) {
-      console.log(`Found ${students.length} students for class ID ${classIdToTest}:`);
-      students.forEach(student => {
-        console.log(`- Student: ${student.name} (ID: ${student.id}, Email: ${student.email})`);
+      console.log(
+        `Found ${students.length} students for class ID ${classIdToTest}:`,
+      );
+      students.forEach((student) => {
+        console.log(
+          `- Student: ${student.name} (ID: ${student.id}, Email: ${student.email})`,
+        );
       });
     } else {
       console.log(`No students found for class ID ${classIdToTest}.`);
     }
   } catch (error) {
-    console.error(`Error testing getStudentsByClassId service for class ID ${classIdToTest}:`, error);
+    console.error(
+      `Error testing getStudentsByClassId service for class ID ${classIdToTest}:`,
+      error,
+    );
   }
 }

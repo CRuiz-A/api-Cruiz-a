@@ -145,6 +145,35 @@ export class UsersController {
     return this.usersService.remove(+id);
   }
 
+  @Get('me/type')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Obtener el tipo de usuario autenticado' })
+  @ApiResponse({
+    status: 200,
+    description: 'Tipo de usuario obtenido exitosamente',
+    schema: {
+      type: 'object',
+      properties: {
+        userType: { type: 'string', example: 'Admin' },
+        userTypeCode: { type: 'number', example: 1 },
+      },
+    },
+  })
+  @ApiResponse({ status: 401, description: 'No autorizado' })
+  @ApiResponse({ status: 404, description: 'Usuario no encontrado' })
+  async getCurrentUserType(
+    @Request() req,
+  ): Promise<{ userType: string; userTypeCode: number }> {
+    const userId = req.user.sub;
+    const user = await this.usersService.findById(+userId);
+    const typeName = this.usersService.getUserTypeName(user.userType);
+    return {
+      userType: typeName,
+      userTypeCode: user.userType,
+    };
+  }
+
   @Post('change-password')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()

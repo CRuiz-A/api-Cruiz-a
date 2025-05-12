@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm'; // Import CreateDateColumn and UpdateDateColumn
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import { User } from '../../users/entities/users.entity';
 import { ClassStudent } from './class-student.entity';
 
@@ -25,10 +25,4 @@ export class Class {
 
   @OneToMany(() => ClassStudent, cs => cs.class)
   students: ClassStudent[];
-
-  @CreateDateColumn() // Add createdAt column
-  createdAt: Date;
-
-  @UpdateDateColumn() // Add updatedAt column
-  updatedAt: Date;
 }
