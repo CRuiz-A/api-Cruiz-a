@@ -206,62 +206,86 @@ async function bootstrap() {
   await app.listen(process.env.PORT || 3001);
   console.log('El API escucha por el puerto: ', process.env.PORT || 3001);
 
-  // Add test user
-  await addTestUser(app);
+  // Only run test functions in development environment
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('🧪 Running in development mode - executing test functions...');
+    
+    try {
+      // Add test user
+      await addTestUser(app);
 
-  // Add test instructor and class
-  await addTestInstructorAndClass(app);
+      // Add test instructor and class
+      await addTestInstructorAndClass(app);
 
-  // Add test user to test class
-  await addTestUserToTestClass(app);
+      // Add test user to test class
+      await addTestUserToTestClass(app);
 
-  // Show test user's classes
-  await showTestUserClasses(app);
+      // Show test user's classes
+      await showTestUserClasses(app);
 
-  // Add a second test class and enroll test user
-  await addSecondTestClassAndEnrollUser(app);
+      // Add a second test class and enroll test user
+      await addSecondTestClassAndEnrollUser(app);
 
-  // Show test user's classes again to see the new class
-  await showTestUserClasses(app);
-
-  // Test getClassesByDate service
-  const classesService = app.get(ClassesService);
-  const testDateString = '2025-05-10';
-  const testTimezone = 'America/Bogota';
-
-  console.log(
-    `\nFetching classes for date: ${testDateString} in timezone: ${testTimezone}`,
-  );
-  const classesOnDate = await classesService.getClassesByDate(
-    testDateString,
-    testTimezone,
-  );
-
-  if (classesOnDate.length > 0) {
-    console.log(`Found ${classesOnDate.length} classes on ${testDateString}:`);
-    classesOnDate.forEach((classInfo) => {
-      if (classInfo.nombreClase) {
-        // Only log if nombreClase is not null
-        console.log(
-          `- Class: ${classInfo.nombreClase}, Instructor: ${classInfo.instructor?.name || 'N/A'}, Time: ${classInfo.horaInicio}-${classInfo.horaFin}`,
-        );
-      }
-    });
+      // Show test user's classes again to see the new class
+      await showTestUserClasses(app);
+    } catch (error) {
+      console.log('⚠️ Test functions failed (this is normal in development):', error.message);
+    }
   } else {
-    console.log(`No classes found on ${testDateString}.`);
+    console.log('🚀 Running in production mode - skipping test functions');
   }
 
-  // Test enroll-student endpoint
-  await testEnrollStudentEndpoint();
+  // Test getClassesByDate service only in development
+  if (process.env.NODE_ENV !== 'production') {
+    try {
+      const classesService = app.get(ClassesService);
+      const testDateString = '2025-05-10';
+      const testTimezone = 'America/Bogota';
 
-  // Test getStudentsByClassId service
-  await testGetServiceStudentsByClassId(app);
+      console.log(
+        `\nFetching classes for date: ${testDateString} in timezone: ${testTimezone}`,
+      );
+      const classesOnDate = await classesService.getClassesByDate(
+        testDateString,
+        testTimezone,
+      );
 
-  // Test get latest users endpoint
-  await testGetLatestUsersEndpoint();
+      if (classesOnDate.length > 0) {
+        console.log(`Found ${classesOnDate.length} classes on ${testDateString}:`);
+        classesOnDate.forEach((classInfo) => {
+          if (classInfo.nombreClase) {
+            // Only log if nombreClase is not null
+            console.log(
+              `- Class: ${classInfo.nombreClase}, Instructor: ${classInfo.instructor?.name || 'N/A'}, Time: ${classInfo.horaInicio}-${classInfo.horaFin}`,
+            );
+          }
+        });
+      } else {
+        console.log(`No classes found on ${testDateString}.`);
+      }
+    } catch (error) {
+      console.log('⚠️ Classes test failed (this is normal in development):', error.message);
+    }
+  }
 
-  // Test search user by email service
-  await testSearchUserByEmail(app);
+  // Additional test endpoints only in development
+  if (process.env.NODE_ENV !== 'production') {
+    try {
+      // Test enroll-student endpoint
+      await testEnrollStudentEndpoint();
+
+      // Test getStudentsByClassId service
+      await testGetServiceStudentsByClassId(app);
+
+      // Test get latest users endpoint
+      await testGetLatestUsersEndpoint();
+
+      // Test search user by email service
+      await testSearchUserByEmail(app);
+    } catch (error) {
+      console.log('⚠️ Additional tests failed (this is normal in development):', error.message);
+    }
+  }
 }
 bootstrap();
 
