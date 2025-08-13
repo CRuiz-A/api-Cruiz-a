@@ -27,6 +27,11 @@ export class AppController {
     return this.appService.getHello();
   }
 
+  @Get('captcha-protected-ping')
+  pingProtected() {
+    return { ok: true, message: 'pong (captcha-pass requerido)' };
+  }
+
   @Post('validate-captcha')
   async validateCaptcha(@Body() body: TurnstileValidationDto) {
     const { captchaToken, action, timestamp } = body;

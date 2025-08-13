@@ -19,10 +19,14 @@ export class CaptchaPassGuard implements CanActivate {
 
     // Whitelist paths that must remain open
     const whitelisted = [
+      '/validate-captcha',
       '/api/validate-captcha',
+      '/docs',
       '/api/docs',
+      '/docs-json',
       '/api/docs-json',
       '/',
+      '/favicon.ico',
     ];
 
     if (whitelisted.some((path) => url === path || url.startsWith(path + '/'))) {
