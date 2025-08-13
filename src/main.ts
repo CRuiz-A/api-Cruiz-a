@@ -188,6 +188,9 @@ async function bootstrap() {
   // Configuración de CORS
   app.enableCors({
     origin: true,
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Captcha-Token'],
+    exposedHeaders: ['*'],
+    credentials: true,
   });
 
   // Configuración de prefijo global para el API (opcional)

@@ -1,4 +1,6 @@
 import { Controller, Get, Post, Body, HttpException, HttpStatus } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { AppService } from './app.service';
 
 interface TurnstileValidationDto {
@@ -18,7 +20,7 @@ interface TurnstileResponse {
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(private readonly appService: AppService, private readonly jwtService: JwtService, private readonly configService: ConfigService) {}
 
   @Get()
   getHello(): string {
@@ -57,13 +59,26 @@ export class AppController {
       const result: TurnstileResponse = await response.json();
 
       if (result.success) {
-        // Aquí puedes agregar lógica adicional como guardar en base de datos
+        const passSecret = this.configService.get<string>('CAPTCHA_PASS_SECRET');
+        const passTtl = this.configService.get<string>('CAPTCHA_PASS_TTL') || '10m';
+        if (!passSecret) {
+          throw new HttpException({ success: false, message: 'Servidor mal configurado: falta CAPTCHA_PASS_SECRET' }, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        // Emit a short-lived JWT that represents a captcha pass
+        const captchaPassToken = await this.jwtService.signAsync(
+          { kind: 'captcha-pass' },
+          { secret: passSecret, expiresIn: passTtl }
+        );
+
         return {
           success: true,
           message: 'CAPTCHA validado exitosamente',
           challenge_ts: result.challenge_ts,
           hostname: result.hostname,
-          action: result.action || action
+          action: result.action || action,
+          captchaPassToken,
+          expiresIn: passTtl,
         };
       } else {
         throw new HttpException(

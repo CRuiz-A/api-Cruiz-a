@@ -1,8 +1,11 @@
 import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { APP_GUARD } from '@nestjs/core';
+import { CaptchaPassGuard } from './guards/captcha-pass.guard';
 
 // Módulos personalizados
 import { AuthModule } from './modules/auth/auth.module';
@@ -40,6 +43,8 @@ import { User } from './modules/users/entities/users.entity';
           : false,
       }),
     }),
+    // JWT module for captcha-pass signing/verifying
+    JwtModule.register({}),
 
     // Módulos funcionales
     AuthModule,
@@ -47,6 +52,12 @@ import { User } from './modules/users/entities/users.entity';
     ClassesModule, // Módulo que maneja clases y estudiantes
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: CaptchaPassGuard,
+    },
+  ],
 })
 export class AppModule {}
