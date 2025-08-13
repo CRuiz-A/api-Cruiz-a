@@ -32,6 +32,21 @@ export class AppController {
     return { ok: true, message: 'pong (captcha-pass requerido)' };
   }
 
+  @Post('secret')
+  setSecret(@Body() body: { message?: string }) {
+    if (!body || typeof body.message !== 'string' || !body.message.trim()) {
+      throw new HttpException({ message: 'message requerido' }, HttpStatus.BAD_REQUEST);
+    }
+    this.appService.setSecretMessage(body.message.trim());
+    return { ok: true };
+  }
+
+  @Get('secret')
+  getSecret() {
+    const msg = this.appService.getSecretMessage();
+    return { message: msg };
+  }
+
   @Post('validate-captcha')
   async validateCaptcha(@Body() body: TurnstileValidationDto) {
     const { captchaToken, action, timestamp } = body;
